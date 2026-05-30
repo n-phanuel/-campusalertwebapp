@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CampusAlert — My Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+.view{display:none}.view.active{display:block}
+.issue-cards{display:flex;flex-direction:column;gap:12px}
+.issue-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:18px 20px;cursor:pointer;transition:var(--t);display:flex;align-items:flex-start;gap:14px}
+.issue-card:hover{border-color:rgba(204,0,0,.3);transform:translateX(3px)}
+.issue-card-left{flex:1}
+.issue-card-id{font-size:.68rem;color:var(--text3);font-family:monospace;margin-bottom:4px}
+.issue-card-title{font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:6px}
+.issue-card-meta{display:flex;gap:12px;flex-wrap:wrap;align-items:center;font-size:.75rem;color:var(--text3)}
+.issue-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.cat-chip{background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:2px 10px;font-size:.68rem;color:var(--text2);font-weight:500}
+.detail-section{margin-bottom:20px}
+.detail-section h4{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.detail-desc{font-size:.88rem;color:var(--text2);line-height:1.7;background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:14px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-item label{font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-weight:600;display:block;margin-bottom:3px}
+.detail-item span{font-size:.85rem;color:var(--text)}
+.comment-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.comment-item{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px}
+.comment-author{font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:4px}
+.comment-text{font-size:.83rem;color:var(--text2);line-height:1.6}
+.comment-time{font-size:.65rem;color:var(--text3);margin-top:4px}
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;padding-bottom:16px;position:relative}
+.tl-item:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:1px;background:var(--border2)}
+.tl-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;border:2px solid var(--border)}
+.tl-dot.red{background:var(--red-glow);border-color:rgba(204,0,0,.3)}
+.tl-dot.gold{background:var(--gold-glow);border-color:rgba(245,168,0,.3)}
+.tl-dot.green{background:var(--green-glow);border-color:rgba(46,168,99,.3)}
+.tl-content strong{font-size:.82rem;font-weight:600;color:var(--text)}
+.tl-content span{font-size:.72rem;color:var(--text3);display:block;margin-top:2px}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.filter-btn{padding:6px 14px;border-radius:100px;font-size:.78rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text2);transition:var(--t)}
+.filter-btn.active,.filter-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-glow)}
+.search-input{flex:1;max-width:260px;padding:7px 14px;background:var(--bg);border:1.5px solid var(--border);border-radius:100px;color:var(--text);font-size:.82rem;font-family:var(--font-b)}
+.search-input:focus{outline:none;border-color:var(--red)}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🏛️</div>
+      <div class="sidebar-logo-text"><strong>CampusAlert</strong><span>UNAM</span></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar" id="sideAvatar">A</div>
+      <div class="sidebar-user-info">
+        <strong id="sideUserName">Loading…</strong>
+        <span id="sideStudentNo"></span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Student Menu</div>
+      <button class="nav-item active" onclick="showView('overview')"><span class="nav-icon">📊</span> Overview</button>
+      <button class="nav-item" onclick="showView('myissues')"><span class="nav-icon">📋</span> My Reports <span class="nav-badge" id="myIssueCount">0</span></button>
+      <button class="nav-item" onclick="showView('report')"><span class="nav-icon">➕</span> New Report</button>
+      <button class="nav-item" onclick="showView('allissues')"><span class="nav-icon">🌐</span> All Campus Issues</button>
+      <div class="nav-section-label" style="margin-top:12px">Account</div>
+      <button class="nav-item" onclick="DB.logout()"><span class="nav-icon">🚪</span> Sign Out</button>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="index.html" style="font-size:.75rem;color:var(--text3)">← Back to Homepage</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="view active" id="view-overview">
+      <div class="page-header">
+        <div><h1>My Dashboard</h1><p id="welcomeMsg">Welcome back!</p></div>
+        <button class="btn btn-primary" onclick="showView('report')">➕ New Report</button>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" id="myStats"></div>
+        <div class="card">
+          <div class="card-header"><h3>My Recent Reports</h3><button class="btn btn-ghost btn-sm" onclick="showView('myissues')">View all →</button></div>
+          <div class="card-body" id="recentIssuesList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY ISSUES ── -->
+    <div class="view" id="view-myissues">
+      <div class="page-header">
+        <div><h1>My Reports</h1><p>All issues you have submitted</p></div>
+        <button class="btn btn-primary" onclick="showView('report')">➕ New Report</button>
+      </div>
+      <div class="page-body">
+        <div class="filter-bar">
+          <input class="search-input" type="text" placeholder="🔍  Search my reports…" oninput="filterMyIssues()"/>
+          <button class="filter-btn active" data-filter="All" onclick="setFilter(this,'my')">All</button>
+          <button class="filter-btn" data-filter="Open" onclick="setFilter(this,'my')">Open</button>
+          <button class="filter-btn" data-filter="In Progress" onclick="setFilter(this,'my')">In Progress</button>
+          <button class="filter-btn" data-filter="Resolved" onclick="setFilter(this,'my')">Resolved</button>
+        </div>
+        <div class="issue-cards" id="myIssueCards"></div>
+      </div>
+    </div>
+
+    <!-- ── NEW REPORT ── -->
+    <div class="view" id="view-report">
+      <div class="page-header">
+        <div><h1>Submit a Report</h1><p>Describe the campus issue and we'll route it to the right department</p></div>
+      </div>
+      <div class="page-body">
+        <div class="card" style="max-width:700px">
+          <div class="card-header"><h3>New Issue Report</h3></div>
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Issue Category *</label>
+                <select class="form-control" id="f-cat">
+                  <option value="">— Select Category —</option>
+                  <option>WiFi / Network</option><option>Water / Plumbing</option>
+                  <option>Electrical</option><option>Furniture</option>
+                  <option>AV / Projector</option><option>Sanitation</option>
+                  <option>Hostel</option><option>Security</option>
+                  <option>Parking</option><option>Toilet / Ablutions</option><option>Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Priority Level *</label>
+                <select class="form-control" id="f-priority">
+                  <option value="">— Select Priority —</option>
+                  <option>High</option><option>Medium</option><option>Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Issue Title *</label>
+              <input class="form-control" type="text" id="f-title" placeholder="Brief summary of the issue (e.g. WiFi down in Library Block C)"/>
+            </div>
+            <div class="form-group">
+              <label>Location / Building *</label>
+              <input class="form-control" type="text" id="f-location" placeholder="e.g. Main Library, Block C, Floor 2"/>
+            </div>
+            <div class="form-group">
+              <label>Full Description *</label>
+              <textarea class="form-control" id="f-desc" rows="5" placeholder="Describe the issue in detail — what is broken, how long has it been happening, how many people are affected?"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Photo Evidence (optional)</label>
+              <input class="form-control" type="file" id="f-image" accept="image/*" style="padding:8px"/>
+              <div style="font-size:.72rem;color:var(--text3);margin-top:4px">Attach a photo to help maintenance staff understand the issue faster.</div>
+            </div>
+            <div style="display:flex;gap:12px;margin-top:8px">
+              <button class="btn btn-primary btn-lg" style="flex:1" onclick="submitIssue()">📋 Submit Report</button>
+              <button class="btn btn-outline" onclick="resetForm()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALL ISSUES ── -->
+    <div class="view" id="view-allissues">
+      <div class="page-header">
+        <div><h1>All Campus Issues</h1><p>Transparent view of all reported issues across UNAM</p></div>
+      </div>
+      <div class="page-body">
+        <div class="filter-bar">
+          <input class="search-input" type="text" placeholder="🔍  Search all issues…" oninput="filterAllIssues()"/>
+          <button class="filter-btn active" data-filter="All" onclick="setFilter(this,'all')">All</button>
+          <button class="filter-btn" data-filter="Open" onclick="setFilter(this,'all')">Open</button>
+          <button class="filter-btn" data-filter="In Progress" onclick="setFilter(this,'all')">In Progress</button>
+          <button class="filter-btn" data-filter="Resolved" onclick="setFilter(this,'all')">Resolved</button>
+        </div>
+        <div class="issue-cards" id="allIssueCards"></div>
+      </div>
+    </div>
+
+    <!-- ── ISSUE DETAIL (modal-style inline view) ── -->
+    <div class="view" id="view-detail">
+      <div class="page-header">
+        <div><h1 id="detailTitle">Issue Detail</h1><p id="detailId" style="font-family:monospace;color:var(--text3)"></p></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-outline" onclick="goBack()">← Back</button>
+        </div>
+      </div>
+      <div class="page-body">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px" id="detailBody"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="shared.js"></script>
+<script>
+DB.requireAuth();
+const user = DB.session();
+if (user.role === 'admin') window.location.href = 'admin_dashboard.html';
+
+// Populate sidebar
+document.getElementById('sideAvatar').textContent = user.name[0].toUpperCase();
+document.getElementById('sideUserName').textContent = user.name;
+document.getElementById('sideStudentNo').textContent = user.studentNo;
+document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+
+let currentView = 'overview';
+let prevView    = 'overview';
+let myFilter    = 'All';
+let allFilter   = 'All';
+
+function showView(v) {
+  prevView = currentView;
+  currentView = v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const map = {overview:0,myissues:1,report:2,allissues:3};
+  const navItems = document.querySelectorAll('.nav-item');
+  if(map[v]!==undefined) navItems[map[v]].classList.add('active');
+  if(v==='overview')   renderOverview();
+  if(v==='myissues')   renderMyIssues();
+  if(v==='allissues')  renderAllIssues();
+}
+
+function goBack() { showView(prevView==='detail'?'myissues':prevView); }
+
+// ── OVERVIEW ──────────────────────────────────────────────
+function renderOverview() {
+  const mine = DB.getMyIssues();
+  document.getElementById('myIssueCount').textContent = mine.length;
+  const open = mine.filter(i=>i.status==='Open').length;
+  const prog = mine.filter(i=>i.status==='In Progress').length;
+  const res  = mine.filter(i=>i.status==='Resolved').length;
+  document.getElementById('myStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" style="color:var(--text)">${mine.length}</div><div class="stat-label">My Reports</div></div>
+    <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-value">${open}</div><div class="stat-label">Open</div></div>
+    <div class="stat-card gold"><div class="stat-icon">⚙️</div><div class="stat-value">${prog}</div><div class="stat-label">In Progress</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${res}</div><div class="stat-label">Resolved</div></div>`;
+  const container = document.getElementById('recentIssuesList');
+  const recent = [...mine].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,4);
+  if(!recent.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">📭</div><h4>No reports yet</h4><p>Submit your first campus issue using the button above.</p></div>';return;}
+  container.innerHTML=`<div class="issue-cards">${recent.map(issueCard).join('')}</div>`;
+}
+
+// ── MY ISSUES ─────────────────────────────────────────────
+function renderMyIssues(filter=myFilter, search='') {
+  const mine = DB.getMyIssues().filter(i=>{
+    const matchF = filter==='All'||i.status===filter;
+    const matchS = !search||i.title.toLowerCase().includes(search)||i.description.toLowerCase().includes(search)||i.category.toLowerCase().includes(search);
+    return matchF&&matchS;
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  document.getElementById('myIssueCount').textContent = DB.getMyIssues().length;
+  const c=document.getElementById('myIssueCards');
+  c.innerHTML = mine.length ? mine.map(issueCard).join('') : '<div class="empty-state"><div class="empty-icon">🔍</div><h4>No issues found</h4><p>Try a different filter or search term.</p></div>';
+}
+function filterMyIssues() {
+  const s=document.querySelector('#view-myissues .search-input').value.toLowerCase();
+  renderMyIssues(myFilter, s);
+}
+
+// ── ALL ISSUES ────────────────────────────────────────────
+function renderAllIssues(filter=allFilter, search='') {
+  const all = DB.getIssues().filter(i=>{
+    const matchF = filter==='All'||i.status===filter;
+    const matchS = !search||i.title.toLowerCase().includes(search)||i.category.toLowerCase().includes(search)||i.location.toLowerCase().includes(search);
+    return matchF&&matchS;
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const c=document.getElementById('allIssueCards');
+  c.innerHTML = all.length ? all.map(issueCard).join('') : '<div class="empty-state"><div class="empty-icon">🔍</div><h4>No issues found</h4><p>Try a different filter.</p></div>';
+}
+function filterAllIssues() {
+  const s=document.querySelector('#view-allissues .search-input').value.toLowerCase();
+  renderAllIssues(allFilter, s);
+}
+
+function setFilter(el, scope) {
+  const f=el.dataset.filter;
+  if(scope==='my'){ myFilter=f; renderMyIssues(f); }
+  else            { allFilter=f; renderAllIssues(f); }
+  el.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function issueCard(issue) {
+  return `<div class="issue-card" onclick="showDetail('${issue.id}')">
+    <div class="issue-card-left">
+      <div class="issue-card-id">${issue.id}</div>
+      <div class="issue-card-title">${issue.title}</div>
+      <div class="issue-card-meta">
+        <span>📍 ${issue.location}</span>
+        <span>🕐 ${timeAgo(issue.createdAt)}</span>
+        ${issue.comments.length?`<span>💬 ${issue.comments.length}</span>`:''}
+      </div>
+    </div>
+    <div class="issue-card-right">
+      ${statusPill(issue.status)}
+      ${priorityBadge(issue.priority)}
+      <span class="cat-chip">${issue.category}</span>
+    </div>
+  </div>`;
+}
+
+// ── ISSUE DETAIL ──────────────────────────────────────────
+function showDetail(id) {
+  const issue = DB.getIssues().find(i=>i.id===id);
+  if(!issue) return;
+  prevView = currentView;
+  document.getElementById('detailTitle').textContent = issue.title;
+  document.getElementById('detailId').textContent    = issue.id;
+  document.getElementById('detailBody').innerHTML = `
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><h3>Issue Description</h3>${statusPill(issue.status)}</div>
+        <div class="card-body">
+          <div class="detail-section">
+            <div class="detail-desc">${issue.description}</div>
+          </div>
+          <div class="detail-grid">
+            <div class="detail-item"><label>Category</label><span>${issue.category}</span></div>
+            <div class="detail-item"><label>Priority</label><span>${priorityBadge(issue.priority)}</span></div>
+            <div class="detail-item"><label>Location</label><span>${issue.location}</span></div>
+            <div class="detail-item"><label>Assigned To</label><span>${issue.assignedTo||'Not yet assigned'}</span></div>
+            <div class="detail-item"><label>Reported</label><span>${new Date(issue.createdAt).toLocaleDateString('en-NA',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</span></div>
+            <div class="detail-item"><label>Last Updated</label><span>${timeAgo(issue.updatedAt)}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Comments & Updates</h3></div>
+        <div class="card-body">
+          <div class="comment-list" id="commentList">
+            ${issue.comments.length ? issue.comments.map(c=>`
+              <div class="comment-item">
+                <div class="comment-author">${c.author}</div>
+                <div class="comment-text">${c.text}</div>
+                <div class="comment-time">${timeAgo(c.at)}</div>
+              </div>`).join('') : '<p style="font-size:.82rem;color:var(--text3)">No updates yet.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input class="form-control" type="text" id="commentInput" placeholder="Add a comment or follow-up…" style="flex:1"/>
+            <button class="btn btn-primary" onclick="addComment('${issue.id}')">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><h3>Status Timeline</h3></div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="tl-item"><div class="tl-dot red">📋</div><div class="tl-content"><strong>Report Submitted</strong><span>${timeAgo(issue.createdAt)}</span></div></div>
+            ${issue.assignedTo?`<div class="tl-item"><div class="tl-dot gold">👤</div><div class="tl-content"><strong>Assigned to ${issue.assignedTo}</strong><span>${timeAgo(issue.updatedAt)}</span></div></div>`:''}
+            ${issue.status==='In Progress'?`<div class="tl-item"><div class="tl-dot gold">⚙️</div><div class="tl-content"><strong>Work In Progress</strong><span>Being actively addressed</span></div></div>`:''}
+            ${issue.status==='Resolved'?`<div class="tl-item"><div class="tl-dot green">✅</div><div class="tl-content"><strong>Issue Resolved</strong><span>${timeAgo(issue.updatedAt)}</span></div></div>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Quick Info</h3></div>
+        <div class="card-body">
+          <div style="font-size:.82rem;color:var(--text2);line-height:2">
+            <div><span style="color:var(--text3)">Report ID:</span> <code style="color:var(--gold)">${issue.id}</code></div>
+            <div><span style="color:var(--text3)">Category:</span> ${issue.category}</div>
+            <div><span style="color:var(--text3)">Status:</span> ${statusPill(issue.status)}</div>
+            <div><span style="color:var(--text3)">Priority:</span> ${priorityBadge(issue.priority)}</div>
+          </div>
+          ${issue.userId===user.id && issue.status!=='Resolved' ? `
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border2)">
+              <div style="font-size:.72rem;color:var(--text3);margin-bottom:8px">Mark as resolved if fixed:</div>
+              <button class="btn btn-success btn-sm" onclick="markResolved('${issue.id}')">✅ Mark Resolved</button>
+            </div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  showView('detail');
+}
+
+function addComment(id) {
+  const input = document.getElementById('commentInput');
+  const text  = input.value.trim();
+  if(!text) return;
+  DB.addComment(id, text);
+  input.value='';
+  showDetail(id);
+  toast('Comment added successfully.','success');
+}
+
+function markResolved(id) {
+  DB.updateIssue(id,{status:'Resolved'});
+  showDetail(id);
+  toast('Issue marked as resolved.','success');
+}
+
+// ── SUBMIT REPORT ─────────────────────────────────────────
+function submitIssue() {
+  const cat      = document.getElementById('f-cat').value;
+  const priority = document.getElementById('f-priority').value;
+  const title    = document.getElementById('f-title').value.trim();
+  const location = document.getElementById('f-location').value.trim();
+  const desc     = document.getElementById('f-desc').value.trim();
+  if(!cat||!priority||!title||!location||!desc){ toast('Please fill in all required fields.','error'); return; }
+  DB.createIssue({category:cat, priority, title, location, description:desc});
+  resetForm();
+  toast('✅ Your report has been submitted successfully!','success');
+  setTimeout(()=>showView('myissues'), 1200);
+}
+
+function resetForm() {
+  ['f-cat','f-priority','f-title','f-location','f-desc'].forEach(id=>{ const el=document.getElementById(id); el.value=''; });
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${type==='success'?'✅':'❌'}</span> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+// Init
+renderOverview();
+</script>
+</body>
+</html>
