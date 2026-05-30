@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CampusAlert — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+.view{display:none}.view.active{display:block}
+.issues-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.search-input{padding:8px 16px;background:var(--bg);border:1.5px solid var(--border);border-radius:100px;color:var(--text);font-size:.82rem;font-family:var(--font-b);min-width:200px}
+.search-input:focus{outline:none;border-color:var(--red)}
+.filter-btn{padding:6px 14px;border-radius:100px;font-size:.78rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text2);transition:var(--t)}
+.filter-btn.active,.filter-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-glow)}
+.action-bar{display:flex;gap:6px;flex-shrink:0}
+.triage-form select{min-width:140px}
+.issue-row-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:3px}
+.issue-row-meta{font-size:.72rem;color:var(--text3)}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-item label{font-size:.72rem;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:3px}
+.bar-track{background:var(--bg);border-radius:100px;height:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:100px;transition:width 1s ease}
+.bar-fill.red{background:var(--red)}.bar-fill.gold{background:var(--gold)}.bar-fill.green{background:var(--green)}
+.activity-feed{display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto}
+.activity-item{display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--bg);border-radius:var(--r-sm);font-size:.8rem}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.activity-dot.red{background:var(--red)}.activity-dot.gold{background:var(--gold)}.activity-dot.green{background:var(--green)}
+.activity-text{flex:1;color:var(--text2);line-height:1.5}
+.activity-time{font-size:.68rem;color:var(--text3);white-space:nowrap}
+.user-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;display:flex;align-items:center;gap:14px}
+.user-card-info strong{display:block;font-size:.9rem;font-weight:600}
+.user-card-info span{font-size:.75rem;color:var(--text3)}
+.user-card-actions{margin-left:auto;display:flex;gap:8px}
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;transition:var(--t)}
+.detail-overlay.open{opacity:1;visibility:visible}
+.detail-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:640px;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow)}
+.detail-panel-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);z-index:1}
+.detail-panel-body{padding:24px}
+.field-group{margin-bottom:14px}
+.field-group label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);display:block;margin-bottom:5px}
+.comment-bubble{background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;margin-bottom:8px}
+.comment-bubble .cb-author{font-size:.72rem;font-weight:700;color:var(--gold);margin-bottom:3px}
+.comment-bubble .cb-text{font-size:.83rem;color:var(--text2);line-height:1.55}
+.comment-bubble .cb-time{font-size:.65rem;color:var(--text3);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="app-layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🏛️</div>
+      <div class="sidebar-logo-text"><strong>CampusAlert</strong><span>Admin Portal</span></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="avatar gold-av" id="sideAvatar">A</div>
+      <div class="sidebar-user-info">
+        <strong id="sideUserName">Loading…</strong>
+        <span class="role-badge admin">Administrator</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Management</div>
+      <button class="nav-item active" onclick="showView('overview')"><span class="nav-icon">📊</span> Overview</button>
+      <button class="nav-item" onclick="showView('issues')"><span class="nav-icon">📋</span> All Issues <span class="nav-badge" id="openCount">0</span></button>
+      <button class="nav-item" onclick="showView('users')"><span class="nav-icon">👥</span> Users</button>
+      <button class="nav-item" onclick="showView('analytics')"><span class="nav-icon">📈</span> Analytics</button>
+      <div class="nav-section-label" style="margin-top:12px">System</div>
+      <button class="nav-item" onclick="DB.logout()"><span class="nav-icon">🚪</span> Sign Out</button>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="index.html" style="font-size:.75rem;color:var(--text3)">← Homepage</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="view active" id="view-overview">
+      <div class="page-header">
+        <div><h1>Admin Overview</h1><p>Campus issue management at a glance</p></div>
+        <div style="font-size:.78rem;color:var(--text3)">🕐 <span id="lastRefresh"></span></div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" id="adminStats"></div>
+        <div class="chart-row">
+          <div class="card">
+            <div class="card-header"><h3>Issues by Category</h3></div>
+            <div class="card-body"><div class="bar-chart" id="catChart"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Priority Breakdown</h3></div>
+            <div class="card-body"><div class="bar-chart" id="prioChart"></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>Recent Activity</h3><button class="btn btn-ghost btn-sm" onclick="showView('issues')">Manage all →</button></div>
+          <div class="card-body"><div class="activity-feed" id="activityFeed"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ALL ISSUES ── -->
+    <div class="view" id="view-issues">
+      <div class="page-header">
+        <div><h1>Issue Management</h1><p>Review, triage and resolve all campus reports</p></div>
+      </div>
+      <div class="page-body">
+        <div class="issues-toolbar">
+          <input class="search-input" type="text" placeholder="🔍  Search issues…" oninput="renderIssueTable()"/>
+          <button class="filter-btn active" data-filter="All" onclick="setIssueFilter(this)">All</button>
+          <button class="filter-btn" data-filter="Open" onclick="setIssueFilter(this)">Open</button>
+          <button class="filter-btn" data-filter="In Progress" onclick="setIssueFilter(this)">In Progress</button>
+          <button class="filter-btn" data-filter="Resolved" onclick="setIssueFilter(this)">Resolved</button>
+          <select class="form-control triage-form" id="catFilter" onchange="renderIssueTable()" style="width:auto;padding:7px 30px 7px 12px">
+            <option value="">All Categories</option>
+            <option>WiFi / Network</option><option>Water / Plumbing</option><option>Electrical</option>
+            <option>Furniture</option><option>AV / Projector</option><option>Sanitation</option>
+            <option>Hostel</option><option>Security</option><option>Parking</option><option>Toilet / Ablutions</option>
+          </select>
+        </div>
+        <div class="card">
+          <div style="overflow-x:auto">
+            <table class="data-table" id="issueTable">
+              <thead><tr>
+                <th>ID</th><th>Title & Location</th><th>Category</th>
+                <th>Priority</th><th>Status</th><th>Reported</th><th>Actions</th>
+              </tr></thead>
+              <tbody id="issueTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS ── -->
+    <div class="view" id="view-users">
+      <div class="page-header">
+        <div><h1>User Management</h1><p>All registered students and staff</p></div>
+      </div>
+      <div class="page-body">
+        <div style="display:flex;flex-direction:column;gap:10px" id="userList"></div>
+      </div>
+    </div>
+
+    <!-- ── ANALYTICS ── -->
+    <div class="view" id="view-analytics">
+      <div class="page-header">
+        <div><h1>Analytics & Reporting</h1><p>Insights into campus issue patterns and team performance</p></div>
+      </div>
+      <div class="page-body">
+        <div class="stats-grid" id="analyticsStats"></div>
+        <div class="chart-row">
+          <div class="card">
+            <div class="card-header"><h3>Resolution Rate by Category</h3></div>
+            <div class="card-body"><div class="bar-chart" id="resolutionChart"></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>Issue Volume Summary</h3></div>
+            <div class="card-body" id="volumeSummary"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Issue Detail Overlay -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-panel">
+    <div class="detail-panel-header">
+      <div>
+        <h3 id="dpTitle" style="font-family:var(--font-d);font-size:1.15rem;font-weight:700"></h3>
+        <div id="dpId" style="font-size:.72rem;color:var(--text3);font-family:monospace;margin-top:3px"></div>
+      </div>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="detail-panel-body" id="dpBody"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="shared.js"></script>
+<script>
+DB.requireAdmin();
+const user = DB.session();
+document.getElementById('sideAvatar').textContent   = user.name[0].toUpperCase();
+document.getElementById('sideUserName').textContent  = user.name;
+document.getElementById('lastRefresh').textContent   = new Date().toLocaleTimeString();
+
+let issueFilter = 'All';
+let openIssueId = null;
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  const map={overview:0,issues:1,users:2,analytics:3};
+  document.querySelectorAll('.nav-item')[map[v]]?.classList.add('active');
+  if(v==='overview')   renderOverview();
+  if(v==='issues')     renderIssueTable();
+  if(v==='users')      renderUsers();
+  if(v==='analytics')  renderAnalytics();
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────
+function renderOverview() {
+  const s = DB.getStats();
+  document.getElementById('openCount').textContent = s.open;
+  document.getElementById('adminStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value" style="color:var(--text)">${s.total}</div><div class="stat-label">Total Issues</div></div>
+    <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-value">${s.open}</div><div class="stat-label">Open — Needs Action</div></div>
+    <div class="stat-card gold"><div class="stat-icon">⚙️</div><div class="stat-value">${s.inProgress}</div><div class="stat-label">In Progress</div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value">${s.resolved}</div><div class="stat-label">Resolved</div></div>`;
+
+  // Category chart
+  const all = DB.getIssues();
+  const cats = {};
+  all.forEach(i=>{ cats[i.category]=(cats[i.category]||0)+1; });
+  const sortedCats = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxCat = sortedCats[0]?.[1]||1;
+  const colors = ['red','gold','green','red','gold','green'];
+  document.getElementById('catChart').innerHTML = sortedCats.map(([cat,n],i)=>`
+    <div class="bar-item">
+      <label><span>${cat}</span><span>${n}</span></label>
+      <div class="bar-track"><div class="bar-fill ${colors[i]}" style="width:${(n/maxCat*100).toFixed(0)}%"></div></div>
+    </div>`).join('');
+
+  // Priority chart
+  const ph=all.filter(i=>i.priority==='High').length;
+  const pm=all.filter(i=>i.priority==='Medium').length;
+  const pl=all.filter(i=>i.priority==='Low').length;
+  const maxP=Math.max(ph,pm,pl)||1;
+  document.getElementById('prioChart').innerHTML = `
+    <div class="bar-item"><label><span>🔴 High Priority</span><span>${ph}</span></label><div class="bar-track"><div class="bar-fill red" style="width:${(ph/maxP*100).toFixed(0)}%"></div></div></div>
+    <div class="bar-item"><label><span>🟡 Medium Priority</span><span>${pm}</span></label><div class="bar-track"><div class="bar-fill gold" style="width:${(pm/maxP*100).toFixed(0)}%"></div></div></div>
+    <div class="bar-item"><label><span>⚪ Low Priority</span><span>${pl}</span></label><div class="bar-track"><div class="bar-fill green" style="width:${(pl/maxP*100).toFixed(0)}%"></div></div></div>`;
+
+  // Activity feed
+  const recent=[...all].sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt)).slice(0,8);
+  const dotMap={'Open':'red','In Progress':'gold','Resolved':'green'};
+  document.getElementById('activityFeed').innerHTML = recent.map(i=>`
+    <div class="activity-item">
+      <div class="activity-dot ${dotMap[i.status]||'red'}"></div>
+      <div class="activity-text"><strong>${i.id}</strong> — ${i.title} <span style="color:var(--text3)">(${i.category})</span></div>
+      <div class="activity-time">${timeAgo(i.updatedAt)}</div>
+    </div>`).join('');
+}
+
+// ── ISSUE TABLE ───────────────────────────────────────────
+function renderIssueTable() {
+  const search  = document.querySelector('#view-issues .search-input').value.toLowerCase();
+  const catF    = document.getElementById('catFilter').value;
+  const issues  = DB.getIssues().filter(i=>{
+    const mf = issueFilter==='All'||i.status===issueFilter;
+    const mc = !catF||i.category===catF;
+    const ms = !search||i.title.toLowerCase().includes(search)||i.id.toLowerCase().includes(search)||i.location.toLowerCase().includes(search);
+    return mf&&mc&&ms;
+  }).sort((a,b)=>{
+    const po={High:0,Medium:1,Low:2};
+    return (po[a.priority]||2)-(po[b.priority]||2)||new Date(b.createdAt)-new Date(a.createdAt);
+  });
+  document.getElementById('openCount').textContent = DB.getStats().open;
+  document.getElementById('issueTableBody').innerHTML = issues.length
+    ? issues.map(i=>`<tr>
+        <td><code style="font-size:.72rem;color:var(--text3)">${i.id}</code></td>
+        <td><div class="issue-row-title">${i.title}</div><div class="issue-row-meta">📍 ${i.location}</div></td>
+        <td style="white-space:nowrap">${i.category}</td>
+        <td>${priorityBadge(i.priority)}</td>
+        <td>${statusPill(i.status)}</td>
+        <td style="white-space:nowrap">${timeAgo(i.createdAt)}</td>
+        <td>
+          <div class="action-bar">
+            <button class="btn btn-ghost btn-sm" onclick="openDetail('${i.id}')">🔍 View</button>
+            ${i.status!=='Resolved'?`<button class="btn btn-success btn-sm" onclick="quickResolve('${i.id}')">✅</button>`:''}
+          </div>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3)">No issues match the current filter.</td></tr>';
+}
+
+function setIssueFilter(el) {
+  issueFilter = el.dataset.filter;
+  document.querySelectorAll('#view-issues .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderIssueTable();
+}
+
+function quickResolve(id) {
+  DB.updateIssue(id,{status:'Resolved'});
+  renderIssueTable();
+  toast('Issue marked as resolved.','success');
+}
+
+// ── DETAIL OVERLAY ────────────────────────────────────────
+function openDetail(id) {
+  const issue = DB.getIssues().find(i=>i.id===id);
+  if(!issue) return;
+  openIssueId = id;
+  document.getElementById('dpTitle').textContent = issue.title;
+  document.getElementById('dpId').textContent    = issue.id + ' — ' + issue.category;
+  document.getElementById('dpBody').innerHTML = `
+    <div class="field-group"><label>Description</label>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px;font-size:.85rem;color:var(--text2);line-height:1.7">${issue.description}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div class="field-group"><label>Location</label><div style="font-size:.875rem;color:var(--text)">📍 ${issue.location}</div></div>
+      <div class="field-group"><label>Reported</label><div style="font-size:.875rem;color:var(--text)">${new Date(issue.createdAt).toLocaleDateString('en-NA',{day:'numeric',month:'short',year:'numeric'})}</div></div>
+      <div class="field-group"><label>Current Status</label>${statusPill(issue.status)}</div>
+      <div class="field-group"><label>Priority</label>${priorityBadge(issue.priority)}</div>
+    </div>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;margin-bottom:16px">
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--text3);margin-bottom:12px">Admin Actions</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <select class="form-control triage-form" id="dpStatus" style="flex:1;min-width:130px">
+          <option ${issue.status==='Open'?'selected':''}>Open</option>
+          <option ${issue.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${issue.status==='Resolved'?'selected':''}>Resolved</option>
+        </select>
+        <input class="form-control" id="dpAssign" type="text" placeholder="Assign to team/person…" value="${issue.assignedTo||''}" style="flex:1;min-width:160px"/>
+        <button class="btn btn-primary" onclick="applyUpdate()">Apply Update</button>
+      </div>
+    </div>
+    <div class="field-group"><label>Comments & Updates</label>
+      <div id="dpComments" style="margin-bottom:10px">
+        ${issue.comments.length ? issue.comments.map(c=>`
+          <div class="comment-bubble">
+            <div class="cb-author">${c.author}</div>
+            <div class="cb-text">${c.text}</div>
+            <div class="cb-time">${timeAgo(c.at)}</div>
+          </div>`).join('') : '<p style="font-size:.8rem;color:var(--text3);margin-bottom:10px">No comments yet.</p>'}
+      </div>
+      <div style="display:flex;gap:8px">
+        <input class="form-control" type="text" id="dpComment" placeholder="Add admin comment or update note…" style="flex:1"/>
+        <button class="btn btn-outline" onclick="postComment()">Post</button>
+      </div>
+    </div>`;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+function closeDetail(e) {
+  if(e && e.target!==document.getElementById('detailOverlay')) return;
+  document.getElementById('detailOverlay').classList.remove('open');
+  openIssueId = null;
+  renderIssueTable();
+}
+
+function applyUpdate() {
+  if(!openIssueId) return;
+  const status = document.getElementById('dpStatus').value;
+  const assign = document.getElementById('dpAssign').value.trim();
+  DB.updateIssue(openIssueId, {status, assignedTo:assign||null});
+  toast(`Issue updated → ${status}`,'success');
+  openDetail(openIssueId);
+  renderOverview();
+}
+
+function postComment() {
+  if(!openIssueId) return;
+  const text=document.getElementById('dpComment').value.trim();
+  if(!text) return;
+  DB.addComment(openIssueId, text);
+  document.getElementById('dpComment').value='';
+  openDetail(openIssueId);
+  toast('Comment posted.','success');
+}
+
+// ── USERS ─────────────────────────────────────────────────
+function renderUsers() {
+  const users = JSON.parse(localStorage.getItem('ca_users')||'[]');
+  document.getElementById('userList').innerHTML = users.map(u=>`
+    <div class="user-card">
+      <div class="avatar ${u.role==='admin'?'gold-av':''}">${u.name[0].toUpperCase()}</div>
+      <div class="user-card-info">
+        <strong>${u.name}</strong>
+        <span>${u.email} · ${u.studentNo} · ${u.faculty}</span>
+      </div>
+      <div class="user-card-actions">
+        <span class="role-badge ${u.role}">${u.role}</span>
+        <span style="font-size:.75rem;color:var(--text3)">${u.role==='student'?DB.getIssues().filter(i=>i.userId===u.id).length+' reports':''}</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── ANALYTICS ─────────────────────────────────────────────
+function renderAnalytics() {
+  const all = DB.getIssues();
+  const s   = DB.getStats();
+  const rate= s.total ? Math.round(s.resolved/s.total*100) : 0;
+  const avgH= 36; // simulated avg hours
+  const users= JSON.parse(localStorage.getItem('ca_users')||'[]').filter(u=>u.role==='student').length;
+
+  document.getElementById('analyticsStats').innerHTML=`
+    <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-value">${rate}%</div><div class="stat-label">Resolution Rate</div></div>
+    <div class="stat-card gold"><div class="stat-icon">⏱️</div><div class="stat-value">${avgH}h</div><div class="stat-label">Avg. Response Time</div></div>
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" style="color:var(--text)">${users}</div><div class="stat-label">Registered Students</div></div>
+    <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-value">${s.high}</div><div class="stat-label">High Priority Issues</div></div>`;
+
+  const cats={};
+  all.forEach(i=>{
+    if(!cats[i.category]) cats[i.category]={total:0,resolved:0};
+    cats[i.category].total++;
+    if(i.status==='Resolved') cats[i.category].resolved++;
+  });
+  const sorted=Object.entries(cats).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('resolutionChart').innerHTML=sorted.map(([cat,{total,resolved}])=>{
+    const pct=total?Math.round(resolved/total*100):0;
+    return `<div class="bar-item">
+      <label><span>${cat}</span><span>${pct}% (${resolved}/${total})</span></label>
+      <div class="bar-track"><div class="bar-fill green" style="width:${pct}%"></div></div>
+    </div>`;}).join('');
+
+  document.getElementById('volumeSummary').innerHTML=`
+    <div style="font-size:.85rem;color:var(--text2);line-height:2.2">
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:4px"><span>Total Issues Reported</span><strong style="color:var(--text)">${s.total}</strong></div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:4px"><span>Currently Open</span><strong style="color:var(--red)">${s.open}</strong></div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:4px"><span>In Progress</span><strong style="color:var(--gold)">${s.inProgress}</strong></div>
+      <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border2);padding-bottom:4px"><span>Resolved</span><strong style="color:var(--green)">${s.resolved}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding-top:4px"><span>Resolution Rate</span><strong style="color:var(--green)">${rate}%</strong></div>
+    </div>`;
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function toast(msg, type='success') {
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span>${type==='success'?'✅':'❌'}</span> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+// Keyboard: close overlay on Escape
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.getElementById('detailOverlay').classList.remove('open'); });
+
+renderOverview();
+</script>
+</body>
+</html>
