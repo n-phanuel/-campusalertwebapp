@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusAlert — University of Namibia | Issue Reporting System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* =============================================
+       CSS CUSTOM PROPERTIES — UNAM COLOR SYSTEM
+       ============================================= */
+    :root {
+      --unam-red:       #cc0000;
+      --unam-red-dark:  #a30000;
+      --unam-red-glow:  rgba(204, 0, 0, 0.18);
+      --unam-gold:      #f5a800;
+      --unam-gold-dark: #c98700;
+      --unam-gold-glow: rgba(245, 168, 0, 0.15);
+      --dark-bg:        #141414;
+      --dark-surface:   #1e1e1e;
+      --dark-card:      #252525;
+      --dark-border:    #333333;
+      --dark-border2:   #2e2e2e;
+      --text-primary:   #f0f0f0;
+      --text-secondary: #aaaaaa;
+      --text-muted:     #666666;
+      --white:          #ffffff;
+
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', sans-serif;
+
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  20px;
+      --radius-xl:  32px;
+
+      --shadow-card: 0 4px 32px rgba(0,0,0,0.45);
+      --shadow-glow-red:  0 0 40px rgba(204,0,0,0.22);
+      --shadow-glow-gold: 0 0 40px rgba(245,168,0,0.18);
+
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* =============================================
+       RESET & BASE
+       ============================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--dark-bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; display: block; }
+    ul { list-style: none; }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* =============================================
+       ANIMATED BACKGROUND GRAIN
+       ============================================= */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    /* =============================================
+       TOP ANNOUNCEMENT BAR
+       ============================================= */
+    .announcement-bar {
+      background: var(--unam-red);
+      color: var(--white);
+      text-align: center;
+      padding: 9px 24px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      position: relative;
+      z-index: 100;
+    }
+    .announcement-bar span { color: var(--unam-gold); font-weight: 700; }
+
+    /* =============================================
+       NAVIGATION
+       ============================================= */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: rgba(20, 20, 20, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--dark-border);
+    }
+
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+      gap: 24px;
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: var(--unam-red);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: 0 0 0 3px rgba(204,0,0,0.25);
+      flex-shrink: 0;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+    .logo-text strong {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+    .logo-text span {
+      font-size: 0.68rem;
+      color: var(--unam-gold);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Nav Links */
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--white); background: var(--dark-card); }
+    .nav-links a.active { color: var(--unam-gold); }
+
+    /* CTA Buttons */
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px;
+      padding: 10px 22px; 
+      border-radius: var(--radius-sm); 
+      font-family: var(--font-body);
+      font-size: 0.875rem; 
+      font-weight: 600; 
+      cursor: pointer; 
+      border: none; 
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1.5px solid var(--dark-border);
+      color: var(--text-secondary);
+    }
+    .btn-outline:hover { border-color: var(--unam-gold); color: var(--unam-gold); }
+    .btn-primary {
+      background: var(--unam-red);
+      color: var(--white);
+      box-shadow: 0 2px 12px rgba(204,0,0,0.35);
+    }
+    .btn-primary:hover { background: var(--unam-red-dark); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(204,0,0,0.45); }
+    .btn-gold {
+      background: var(--unam-gold);
+      color: #111;
+      box-shadow: 0 2px 12px rgba(245,168,0,0.35);
+    }
+    .btn-gold:hover { background: var(--unam-gold-dark); transform: translateY(-1px); }
+    .btn-lg { padding: 14px 32px; font-size: 1rem; border-radius: var(--radius-md); }
+
+    /* Hamburger */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    /* =============================================
+       HERO SECTION
+       ============================================= */
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding: 80px 0 60px;
+    }
+
+    /* Mesh gradient background */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 30%, rgba(204,0,0,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(245,168,0,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(30,30,30,0.8) 0%, transparent 80%),
+        var(--dark-bg);
+      z-index: 0;
+    }
+
+    /* Animated geometric accent */
+    .hero-circle-1 {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      border: 1px solid rgba(204,0,0,0.08);
+      top: -150px;
+      right: -100px;
+      animation: slowSpin 40s linear infinite;
+      z-index: 0;
+    }
+    .hero-circle-2 {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      border: 1px solid rgba(245,168,0,0.07);
+      top: -50px;
+      right: 0px;
+      animation: slowSpin 28s linear infinite reverse;
+      z-index: 0;
+    }
+    @keyframes slowSpin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+
+    /* Hero text */
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245,168,0,0.1);
+      border: 1px solid rgba(245,168,0,0.25);
+      color: var(--unam-gold);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s ease both;
+    }
+    .hero-eyebrow::before { content: '●'; font-size: 0.5rem; animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    .hero-heading {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.7s 0.1s ease both;
+    }
+    .hero-heading .red  { color: var(--unam-red); }
+    .hero-heading .gold { color: var(--unam-gold); }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      max-width: 480px;
+      margin-bottom: 36px;
+      font-weight: 300;
+      animation: fadeInUp 0.7s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+      animation: fadeInUp 0.7s 0.3s ease both;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      animation: fadeInUp 0.7s 0.4s ease both;
+    }
+    .stat-item { display: flex; flex-direction: column; }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--unam-gold);
+      line-height: 1;
+    }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+    .stat-divider { width: 1px; background: var(--dark-border); }
+
+    /* Hero visual panel */
+    .hero-visual {
+      animation: fadeInRight 0.8s 0.2s ease both;
+    }
+
+    .dashboard-mockup {
+      background: var(--dark-surface);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card), 0 0 60px rgba(204,0,0,0.08);
+    }
+
+    .mockup-header {
+      background: var(--dark-card);
+      border-bottom: 1px solid var(--dark-border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mockup-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .mockup-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .mockup-dot:nth-child(1) { background: var(--unam-red); }
+    .mockup-dot:nth-child(2) { background: var(--unam-gold); }
+    .mockup-dot:nth-child(3) { background: #3a3a3a; }
+    .mockup-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .mockup-body { padding: 20px; }
+
+    .mockup-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .mockup-stat {
+      background: var(--dark-bg);
+      border: 1px solid var(--dark-border2);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+    .mockup-stat-val {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .mockup-stat-val.red { color: var(--unam-red); }
+    .mockup-stat-val.gold { color: var(--unam-gold); }
+    .mockup-stat-val.green { color: #3dba6f; }
+    .mockup-stat-label { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+
+    .mockup-issue-list { display: flex; flex-direction: column; gap: 8px; }
+    .mockup-issue {
+      background: var(--dark-bg);
+      border: 1px solid var(--dark-border2);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      animation: slideIssue 0.5s ease both;
+    }
+    .mockup-issue:nth-child(2) { animation-delay: 0.1s; }
+    .mockup-issue:nth-child(3) { animation-delay: 0.2s; }
+    .mockup-issue:nth-child(4) { animation-delay: 0.3s; }
+
+    @keyframes slideIssue {
+      from { opacity:0; transform: translateX(10px); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+
+    .issue-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .issue-dot.open    { background: var(--unam-red); }
+    .issue-dot.progress{ background: var(--unam-gold); }
+    .issue-dot.resolved{ background: #3dba6f; }
+
+    .issue-text { flex: 1; color: var(--text-secondary); }
+    .issue-badge {
+      font-size: 0.62rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-weight: 600;
+    }
+    .issue-badge.open     { background: var(--unam-red-glow); color: var(--unam-red); border: 1px solid rgba(204,0,0,0.3); }
+    .issue-badge.progress { background: var(--unam-gold-glow); color: var(--unam-gold); border: 1px solid rgba(245,168,0,0.3); }
+    .issue-badge.resolved { background: rgba(61,186,111,0.12); color: #3dba6f; border: 1px solid rgba(61,186,111,0.3); }
+
+    @keyframes fadeInUp {
+      from { opacity:0; transform: translateY(20px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes fadeInRight {
+      from { opacity:0; transform: translateX(30px); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+
+    /* =============================================
+       DIVIDER
+       ============================================= */
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--dark-border), transparent);
+      margin: 0;
+    }
+
+    /* =============================================
+       TRUST BAND
+       ============================================= */
+    .trust-band {
+      background: var(--dark-surface);
+      border-top: 1px solid var(--dark-border);
+      border-bottom: 1px solid var(--dark-border);
+      padding: 20px 0;
+    }
+    .trust-inner {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      overflow: hidden;
+    }
+    .trust-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .trust-items {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .trust-item {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+    .trust-item span { color: var(--unam-gold); font-size: 1rem; }
+
+    /* =============================================
+       SECTION SHARED
+       ============================================= */
+    section { position: relative; z-index: 1; }
+
+    .section-pad { padding: 96px 0; }
+    .section-pad-sm { padding: 72px 0; }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--unam-red);
+      margin-bottom: 14px;
+    }
+    .section-tag::before { content: ''; display: block; width: 20px; height: 2px; background: var(--unam-red); border-radius: 2px; }
+
+    .section-heading {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .section-heading .accent { color: var(--unam-gold); }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      max-width: 560px;
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .text-center { text-align: center; }
+    .text-center .section-sub { margin: 0 auto; }
+    .text-center .section-tag { justify-content: center; }
+    .text-center .section-tag::before { display: none; }
+
+    /* =============================================
+       HOW IT WORKS
+       ============================================= */
+    .how-it-works { background: var(--dark-bg); }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+      position: relative;
+    }
+
+    /* Connecting line */
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--unam-red), var(--unam-gold));
+      opacity: 0.3;
+      z-index: 0;
+    }
+
+    .step-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-md);
+      padding: 28px 22px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      transition: var(--transition);
+    }
+    .step-card:hover {
+      border-color: var(--unam-red);
+      box-shadow: var(--shadow-glow-red);
+      transform: translateY(-4px);
+    }
+    .step-number {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--unam-red);
+      color: var(--white);
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 0 0 4px rgba(204,0,0,0.15);
+    }
+    .step-card:nth-child(2) .step-number { background: transparent; border: 2px solid var(--unam-gold); color: var(--unam-gold); box-shadow: 0 0 0 4px rgba(245,168,0,0.1); }
+    .step-card:nth-child(3) .step-number { background: transparent; border: 2px solid var(--unam-red); color: var(--unam-red); }
+    .step-card:nth-child(4) .step-number { background: var(--unam-gold); color: #111; box-shadow: 0 0 0 4px rgba(245,168,0,0.15); }
+
+    .step-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    .step-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* =============================================
+       FEATURES SECTION
+       ============================================= */
+    .features-section { background: var(--dark-surface); }
+
+    .features-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      margin-top: 56px;
+    }
+
+    .features-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 18px 20px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .feature-item:hover, .feature-item.active {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+    .feature-item.active { border-color: rgba(204,0,0,0.3); }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      background: var(--unam-red-glow);
+      border: 1px solid rgba(204,0,0,0.2);
+    }
+    .feature-item:nth-child(2) .feature-icon { background: var(--unam-gold-glow); border-color: rgba(245,168,0,0.2); }
+    .feature-item:nth-child(3) .feature-icon { background: rgba(61,186,111,0.1); border-color: rgba(61,186,111,0.2); }
+    .feature-item:nth-child(4) .feature-icon { background: rgba(80,130,255,0.1); border-color: rgba(80,130,255,0.2); }
+
+    .feature-text h4 { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+    .feature-text p  { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; }
+
+    .features-visual {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .form-preview {
+      padding: 28px;
+    }
+    .form-preview h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--dark-border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-preview h4::before {
+      content: '';
+      display: block;
+      width: 3px;
+      height: 18px;
+      background: var(--unam-red);
+      border-radius: 2px;
+    }
+
+    .form-field {
+      margin-bottom: 14px;
+    }
+    .form-field label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .form-field .field-input {
+      width: 100%;
+      background: var(--dark-bg);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-family: var(--font-body);
+    }
+    .form-field .field-input:focus { outline: none; border-color: var(--unam-red); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .field-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    .form-submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--unam-red);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font-body);
+      letter-spacing: 0.02em;
+    }
+    .form-submit-btn:hover { background: var(--unam-red-dark); }
+
+    /* =============================================
+       CATEGORIES GRID
+       ============================================= */
+    .categories-section { background: var(--dark-bg); }
+
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 48px;
+    }
+
+    .cat-card {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-md);
+      padding: 22px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--unam-red);
+      transform: scaleX(0);
+      transition: var(--transition);
+    }
+    .cat-card:hover::after { transform: scaleX(1); }
+    .cat-card:hover {
+      border-color: rgba(204,0,0,0.25);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-card);
+    }
+
+    .cat-icon { font-size: 1.8rem; margin-bottom: 10px; }
+    .cat-name { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); line-height: 1.3; }
+    .cat-count {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 100px;
+      background: var(--unam-red-glow);
+      color: var(--unam-red);
+      font-weight: 600;
+    }
+
+    /* =============================================
+       LIVE ISSUES TICKER
+       ============================================= */
+    .live-section { background: var(--dark-surface); }
+
+    .live-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 28px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--unam-red);
+      background: var(--unam-red-glow);
+      border: 1px solid rgba(204,0,0,0.25);
+      padding: 5px 12px;
+      border-radius: 100px;
+    }
+    .live-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--unam-red);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .issues-table thead tr {
+      border-bottom: 2px solid var(--unam-red);
+    }
+    .issues-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+    }
+    .issues-table tbody tr {
+      border-bottom: 1px solid var(--dark-border2);
+      transition: var(--transition);
+    }
+    .issues-table tbody tr:hover {
+      background: var(--dark-card);
+    }
+    .issues-table td {
+      padding: 14px 16px;
+      color: var(--text-secondary);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .status-pill::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+    .status-open     { background: var(--unam-red-glow); color: var(--unam-red); border: 1px solid rgba(204,0,0,0.25); }
+    .status-open::before { background: var(--unam-red); }
+    .status-progress { background: var(--unam-gold-glow); color: var(--unam-gold); border: 1px solid rgba(245,168,0,0.25); }
+    .status-progress::before { background: var(--unam-gold); }
+    .status-resolved { background: rgba(61,186,111,0.1); color: #3dba6f; border: 1px solid rgba(61,186,111,0.25); }
+    .status-resolved::before { background: #3dba6f; }
+
+    .priority-high   { color: var(--unam-red); font-weight: 700; font-size: 0.72rem; }
+    .priority-medium { color: var(--unam-gold); font-weight: 600; font-size: 0.72rem; }
+    .priority-low    { color: var(--text-muted); font-weight: 500; font-size: 0.72rem; }
+
+    .issue-id { font-family: monospace; color: var(--text-muted); font-size: 0.75rem; }
+
+    /* =============================================
+       CTA SECTION
+       ============================================= */
+    .cta-section {
+      background: var(--dark-bg);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 50%, rgba(204,0,0,0.07) 0%, transparent 70%);
+    }
+    .cta-box {
+      position: relative;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      border-radius: var(--radius-xl);
+      padding: 64px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--unam-red), var(--unam-gold), var(--unam-red));
+    }
+    .cta-box h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    .cta-box p {
+      color: var(--text-secondary);
+      max-width: 520px;
+      margin: 0 auto 36px;
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+    .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* =============================================
+       FOOTER
+       ============================================= */
+    footer {
+      background: #0f0f0f;
+      border-top: 1px solid var(--dark-border);
+      padding: 56px 0 0;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 48px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid var(--dark-border);
+    }
+
+    .footer-brand .logo { margin-bottom: 16px; }
+    .footer-brand p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 280px;
+    }
+
+    .footer-col h5 {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--unam-gold);
+      margin-bottom: 16px;
+    }
+    .footer-col ul { display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+    .footer-col ul li a:hover { color: var(--unam-gold); }
+
+    .footer-bottom {
+      padding: 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-bottom p { font-size: 0.75rem; color: var(--text-muted); }
+    .footer-bottom span { color: var(--unam-red); }
+
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { font-size: 0.75rem; color: var(--text-muted); transition: var(--transition); }
+    .footer-links a:hover { color: var(--unam-gold); }
+
+    /* =============================================
+       MOBILE NAV OVERLAY
+       ============================================= */
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,10,0.97);
+      z-index: 9998;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .mobile-menu a:hover { color: var(--unam-gold); }
+    .mobile-close {
+      position: absolute;
+      top: 20px; right: 24px;
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      color: var(--text-primary);
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    /* =============================================
+       SCROLL ANIMATIONS
+       ============================================= */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =============================================
+       RESPONSIVE
+       ============================================= */
+    @media (max-width: 1024px) {
+      .steps-grid { grid-template-columns: repeat(2, 1fr); }
+      .cat-grid   { grid-template-columns: repeat(3, 1fr); }
+      .features-layout { gap: 48px; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .hero-inner { grid-template-columns: 1fr; }
+      .hero-visual { display: none; }
+      .hero { min-height: auto; padding: 60px 0 48px; }
+      .hero-stats { gap: 20px; }
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .steps-grid::before { display: none; }
+      .features-layout { grid-template-columns: 1fr; gap: 36px; }
+      .cat-grid { grid-template-columns: repeat(2, 1fr); }
+      .cta-box { padding: 36px 24px; }
+      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+      .issues-table { font-size: 0.75rem; }
+      .issues-table th, .issues-table td { padding: 10px 10px; }
+    }
+
+    @media (max-width: 480px) {
+      .steps-grid { grid-template-columns: 1fr; }
+      .cat-grid   { grid-template-columns: repeat(2, 1fr); }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       ANNOUNCEMENT BAR
+       ========================================== -->
+  <div class="announcement-bar">
+    🎓 Now live at <span>UNAM</span> — Report campus issues instantly. Response time guaranteed within <span>48 hours</span>.
+  </div>
+
+  <!-- ==========================================
+       NAVIGATION
+       ========================================== -->
+  <nav class="navbar">
+    <div class="container navbar-inner">
+      <a href="#" class="logo">
+        <div class="logo-icon">🏛️</div>
+        <div class="logo-text">
+          <strong>CampusAlert</strong>
+          <span>UNAM Issue Reporting</span>
+        </div>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#" class="active">Home</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#categories">Categories</a></li>
+        <li><a href="#live-issues">Live Issues</a></li>
+        <li><a href="#">Admin Portal</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="login.html" class="btn btn-outline">Sign In</a>
+        <a href="login.html" class="btn btn-primary">Report Issue</a>
+      </div>
+
+      <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu Overlay -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="mobile-close" onclick="toggleMenu()">✕</button>
+    <a href="#" onclick="toggleMenu()">Home</a>
+    <a href="#how-it-works" onclick="toggleMenu()">How It Works</a>
+    <a href="#categories" onclick="toggleMenu()">Categories</a>
+    <a href="#live-issues" onclick="toggleMenu()">Live Issues</a>
+    <a href="#" onclick="toggleMenu()">Admin Portal</a>
+    <a href="login.html" onclick="toggleMenu()" style="margin-top:20px" class="btn btn-primary btn-lg">Report Issue →</a>
+  </div>
+
+  <!-- ==========================================
+       HERO
+       ========================================== -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-circle-1"></div>
+    <div class="hero-circle-2"></div>
+
+    <div class="container">
+      <div class="hero-inner">
+        <!-- Text -->
+        <div class="hero-content">
+          <div class="hero-eyebrow">University of Namibia — Campus Management</div>
+
+          <h1 class="hero-heading">
+            Report Campus<br>
+            Issues <span class="red">Instantly.</span><br>
+            <span class="gold">Get Results.</span>
+          </h1>
+
+          <p class="hero-sub">
+            CampusAlert is UNAM's centralized digital platform for reporting, tracking, and resolving campus infrastructure and service issues — bringing students, staff, and facilities management together in one transparent system.
+          </p>
+
+          <div class="hero-actions">
+            <a href="login.html" class="btn btn-primary btn-lg">
+              📋 Report an Issue
+            </a>
+            <a href="#how-it-works" class="btn btn-outline btn-lg">
+              How It Works →
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-value">124</span>
+              <span class="stat-label">Active Reports</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-value">89%</span>
+              <span class="stat-label">Resolution Rate</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-value">36h</span>
+              <span class="stat-label">Avg. Response</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual: Dashboard Mockup -->
+        <div class="hero-visual">
+          <div class="dashboard-mockup">
+            <div class="mockup-header">
+              <div class="mockup-dots">
+                <div class="mockup-dot"></div>
+                <div class="mockup-dot"></div>
+                <div class="mockup-dot"></div>
+              </div>
+              <span class="mockup-title">CampusAlert — Admin Dashboard</span>
+            </div>
+            <div class="mockup-body">
+              <div class="mockup-stats-row">
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val red">43</div>
+                  <div class="mockup-stat-label">Open Issues</div>
+                </div>
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val gold">28</div>
+                  <div class="mockup-stat-label">In Progress</div>
+                </div>
+                <div class="mockup-stat">
+                  <div class="mockup-stat-val green">53</div>
+                  <div class="mockup-stat-label">Resolved</div>
+                </div>
+              </div>
+              <div class="mockup-issue-list">
+                <div class="mockup-issue">
+                  <div class="issue-dot open"></div>
+                  <span class="issue-text">WiFi outage — Main Library, Block C</span>
+                  <span class="issue-badge open">Open</span>
+                </div>
+                <div class="mockup-issue">
+                  <div class="issue-dot progress"></div>
+                  <span class="issue-text">Water leak — Female Hostel 3</span>
+                  <span class="issue-badge progress">In Progress</span>
+                </div>
+                <div class="mockup-issue">
+                  <div class="issue-dot resolved"></div>
+                  <span class="issue-text">Broken projector — Lecture Hall 7</span>
+                  <span class="issue-badge resolved">Resolved</span>
+                </div>
+                <div class="mockup-issue">
+                  <div class="issue-dot open"></div>
+                  <span class="issue-text">Electrical fault — Science Block B</span>
+                  <span class="issue-badge open">Open</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       TRUST BAND
+       ========================================== -->
+  <div class="trust-band">
+    <div class="container trust-inner">
+      <span class="trust-label">Trusted at UNAM for</span>
+      <div class="trust-items">
+        <div class="trust-item"><span>🏛️</span> All UNAM Campuses</div>
+        <div class="trust-item"><span>🔒</span> Secure & Private</div>
+        <div class="trust-item"><span>📱</span> Mobile Responsive</div>
+        <div class="trust-item"><span>⚡</span> Real-Time Tracking</div>
+        <div class="trust-item"><span>🎓</span> Student-First Design</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       HOW IT WORKS
+       ========================================== -->
+  <section class="how-it-works section-pad" id="how-it-works">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-tag">Simple Process</div>
+        <h2 class="section-heading">From Report to <span class="accent">Resolution</span></h2>
+        <p class="section-sub">Four straightforward steps that connect students to facilities management — no phone calls, no paperwork, no lost emails.</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card reveal">
+          <div class="step-number">1</div>
+          <div class="step-title">Register & Sign In</div>
+          <p class="step-desc">Create your UNAM student account using your institutional email address to access the full reporting system.</p>
+        </div>
+        <div class="step-card reveal" style="transition-delay:0.1s">
+          <div class="step-number">2</div>
+          <div class="step-title">Submit Your Report</div>
+          <p class="step-desc">Fill in the issue form, select a category, provide your location, and attach photos as evidence.</p>
+        </div>
+        <div class="step-card reveal" style="transition-delay:0.2s">
+          <div class="step-number">3</div>
+          <div class="step-title">Staff Reviews & Acts</div>
+          <p class="step-desc">The facilities management team receives your report instantly, prioritizes it, and assigns a technician.</p>
+        </div>
+        <div class="step-card reveal" style="transition-delay:0.3s">
+          <div class="step-number">4</div>
+          <div class="step-title">Track & Confirm</div>
+          <p class="step-desc">Monitor your report's progress in real time. Confirm resolution once the issue has been fixed to your satisfaction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ==========================================
+       FEATURES
+       ========================================== -->
+  <section class="features-section section-pad" id="features">
+    <div class="container">
+      <div class="features-layout">
+        <div>
+          <div class="section-tag reveal">Platform Features</div>
+          <h2 class="section-heading reveal">Everything You Need to <span class="accent">Stay Heard</span></h2>
+          <p class="section-sub reveal">A comprehensive suite of tools for both students reporting issues and administrators managing campus maintenance.</p>
+
+          <div class="features-list" style="margin-top:32px">
+            <div class="feature-item active reveal">
+              <div class="feature-icon">📋</div>
+              <div class="feature-text">
+                <h4>Smart Issue Submission</h4>
+                <p>Guided form with category selection, location tags, priority levels, and photo evidence uploads.</p>
+              </div>
+            </div>
+            <div class="feature-item reveal">
+              <div class="feature-icon">📡</div>
+              <div class="feature-text">
+                <h4>Real-Time Status Tracking</h4>
+                <p>Watch your report progress from Submitted → Assigned → In Progress → Resolved with live updates.</p>
+              </div>
+            </div>
+            <div class="feature-item reveal">
+              <div class="feature-icon">🛡️</div>
+              <div class="feature-text">
+                <h4>Admin Management Dashboard</h4>
+                <p>A powerful admin panel for facilities staff to manage, prioritize, assign, and close issue reports efficiently.</p>
+              </div>
+            </div>
+            <div class="feature-item reveal">
+              <div class="feature-icon">📊</div>
+              <div class="feature-text">
+                <h4>Analytics & Reporting</h4>
+                <p>Identify recurring problem areas, monitor response times, and generate maintenance performance reports.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Preview Visual -->
+        <div class="features-visual reveal">
+          <div class="form-preview">
+            <h4>Report a Campus Issue</h4>
+
+            <div class="form-field">
+              <label>Full Name</label>
+              <input class="field-input" type="text" value="Amara Nghifindaka" readonly />
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Student Number</label>
+                <input class="field-input" type="text" value="220042871" readonly />
+              </div>
+              <div class="form-field">
+                <label>Faculty</label>
+                <select class="field-input field-select">
+                  <option>Engineering & IT</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Issue Category</label>
+              <select class="field-input field-select">
+                <option>🌐 WiFi / Network Problem</option>
+                <option>💧 Water / Plumbing Issue</option>
+                <option>⚡ Electrical Fault</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Location / Building</label>
+              <input class="field-input" type="text" value="Main Campus — Library Block C, Floor 2" readonly />
+            </div>
+            <div class="form-field">
+              <label>Description</label>
+              <textarea class="field-input" rows="3" style="resize:none;line-height:1.5">WiFi has been completely down in the reading area since Monday morning. Multiple students affected...</textarea>
+            </div>
+            <div class="form-field">
+              <label>Priority Level</label>
+              <select class="field-input field-select">
+                <option>🔴 High — Affecting Learning</option>
+              </select>
+            </div>
+            <button class="form-submit-btn">Submit Issue Report →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ==========================================
+       ISSUE CATEGORIES
+       ========================================== -->
+  <section class="categories-section section-pad" id="categories">
+    <div class="container">
+      <div class="text-center reveal">
+        <div class="section-tag">Issue Types</div>
+        <h2 class="section-heading">Browse Issue <span class="accent">Categories</span></h2>
+        <p class="section-sub">Select the category that best matches your campus issue for faster routing and resolution by the right department.</p>
+      </div>
+
+      <div class="cat-grid">
+        <div class="cat-card reveal">
+          <div class="cat-icon">🌐</div>
+          <div class="cat-name">WiFi & Network</div>
+          <span class="cat-count">18 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.05s">
+          <div class="cat-icon">💧</div>
+          <div class="cat-name">Water & Plumbing</div>
+          <span class="cat-count">7 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.1s">
+          <div class="cat-icon">⚡</div>
+          <div class="cat-name">Electrical Faults</div>
+          <span class="cat-count">11 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.15s">
+          <div class="cat-icon">🪑</div>
+          <div class="cat-name">Broken Furniture</div>
+          <span class="cat-count">9 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.2s">
+          <div class="cat-icon">📽️</div>
+          <div class="cat-name">Projectors & AV</div>
+          <span class="cat-count">5 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.25s">
+          <div class="cat-icon">🧹</div>
+          <div class="cat-name">Sanitation & Cleaning</div>
+          <span class="cat-count">14 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.3s">
+          <div class="cat-icon">🏠</div>
+          <div class="cat-name">Hostel Issues</div>
+          <span class="cat-count">6 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.35s">
+          <div class="cat-icon">🔒</div>
+          <div class="cat-name">Security Concerns</div>
+          <span class="cat-count">3 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.4s">
+          <div class="cat-icon">🚗</div>
+          <div class="cat-name">Parking Complaints</div>
+          <span class="cat-count">8 active</span>
+        </div>
+        <div class="cat-card reveal" style="transition-delay:0.45s">
+          <div class="cat-icon">🚽</div>
+          <div class="cat-name">Toilet & Ablutions</div>
+          <span class="cat-count">12 active</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ==========================================
+       LIVE ISSUES TABLE
+       ========================================== -->
+  <section class="live-section section-pad" id="live-issues">
+    <div class="container">
+      <div class="live-header reveal">
+        <div>
+          <div class="section-tag">Transparency Dashboard</div>
+          <h2 class="section-heading">Recently <span class="accent">Reported Issues</span></h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="live-badge">Live Feed</span>
+          <a href="#" class="btn btn-outline" style="font-size:0.8rem;padding:8px 16px">View All →</a>
+        </div>
+      </div>
+
+      <div class="reveal" style="overflow-x:auto">
+        <table class="issues-table">
+          <thead>
+            <tr>
+              <th>Issue ID</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Location</th>
+              <th>Priority</th>
+              <th>Reported</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="issueTableBody">
+            <tr>
+              <td><span class="issue-id">#UNAM-1048</span></td>
+              <td>🌐 WiFi / Network</td>
+              <td>No connectivity in reading hall</td>
+              <td>Main Library, Block C</td>
+              <td><span class="priority-high">● HIGH</span></td>
+              <td>2h ago</td>
+              <td><span class="status-pill status-open">Open</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1047</span></td>
+              <td>💧 Water Leak</td>
+              <td>Burst pipe in female ablution block</td>
+              <td>Hostel Block F</td>
+              <td><span class="priority-high">● HIGH</span></td>
+              <td>5h ago</td>
+              <td><span class="status-pill status-progress">In Progress</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1046</span></td>
+              <td>📽️ Projector / AV</td>
+              <td>Projector lamp blown — no display</td>
+              <td>Lecture Hall 7, Eng. Block</td>
+              <td><span class="priority-medium">● MEDIUM</span></td>
+              <td>1d ago</td>
+              <td><span class="status-pill status-resolved">Resolved</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1045</span></td>
+              <td>⚡ Electrical</td>
+              <td>Power socket strip sparking dangerously</td>
+              <td>Computer Lab 3, ICT Building</td>
+              <td><span class="priority-high">● HIGH</span></td>
+              <td>1d ago</td>
+              <td><span class="status-pill status-progress">In Progress</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1044</span></td>
+              <td>🧹 Sanitation</td>
+              <td>Overflowing bins, strong odour in corridor</td>
+              <td>Science Building, Ground Fl.</td>
+              <td><span class="priority-medium">● MEDIUM</span></td>
+              <td>2d ago</td>
+              <td><span class="status-pill status-open">Open</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1043</span></td>
+              <td>🪑 Broken Furniture</td>
+              <td>6 chairs with broken backs in tutorial room</td>
+              <td>Humanities Block, Room 214</td>
+              <td><span class="priority-low">● LOW</span></td>
+              <td>3d ago</td>
+              <td><span class="status-pill status-resolved">Resolved</span></td>
+            </tr>
+            <tr>
+              <td><span class="issue-id">#UNAM-1042</span></td>
+              <td>🔒 Security</td>
+              <td>Entrance gate not locking — security concern</td>
+              <td>Parking Area B, North Gate</td>
+              <td><span class="priority-high">● HIGH</span></td>
+              <td>3d ago</td>
+              <td><span class="status-pill status-progress">In Progress</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- ==========================================
+       CALL TO ACTION
+       ========================================== -->
+  <section class="cta-section section-pad">
+    <div class="cta-bg"></div>
+    <div class="container">
+      <div class="cta-box reveal">
+        <h2>Ready to Make <span style="color:var(--unam-gold)">UNAM Better</span>?</h2>
+        <p>Join thousands of UNAM students who are actively contributing to a well-maintained, safe, and functional campus environment. Your report makes a difference.</p>
+        <div class="cta-actions">
+          <a href="login.html" class="btn btn-primary btn-lg">📋 Submit a Report Now</a>
+          <a href="login.html" class="btn btn-gold btn-lg">🎓 Student Sign Up</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       FOOTER
+       ========================================== -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="logo">
+            <div class="logo-icon">🏛️</div>
+            <div class="logo-text">
+              <strong>CampusAlert</strong>
+              <span>UNAM Issue Reporting</span>
+            </div>
+          </a>
+          <p>A digital campus issue reporting platform developed for the University of Namibia — empowering students and staff to maintain a world-class learning environment.</p>
+        </div>
+
+        <div class="footer-col">
+          <h5>Platform</h5>
+          <ul>
+            <li><a href="#">Report an Issue</a></li>
+            <li><a href="#">Track My Reports</a></li>
+            <li><a href="#">Issue Categories</a></li>
+            <li><a href="#">Live Dashboard</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>Administration</h5>
+          <ul>
+            <li><a href="#">Admin Login</a></li>
+            <li><a href="#">Staff Portal</a></li>
+            <li><a href="#">Analytics</a></li>
+            <li><a href="#">Manage Reports</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5>UNAM Links</h5>
+          <ul>
+            <li><a href="https://www.unam.na" target="_blank">UNAM Website</a></li>
+            <li><a href="#">My UNAM Portal</a></li>
+            <li><a href="#">Moodle LMS</a></li>
+            <li><a href="#">Student Webmail</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 CampusAlert — University of Namibia. Developed for IT Project Management. <span></span> Windhoek, Namibia.</p>
+        <div class="footer-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Support</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==========================================
+       JAVASCRIPT
+       ========================================== -->
+  <script>
+    /* Mobile Menu Toggle */
+    function toggleMenu() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('open');
+      document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
+    }
+
+    /* Scroll Reveal */
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            entry.target.classList.add('visible');
+          }, 60);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    /* Active Nav on Scroll */
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        if (window.scrollY >= section.offsetTop - 120) {
+          current = section.getAttribute('id');
+        }
+      });
+      navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+
+    /* Feature card highlight */
+    document.querySelectorAll('.feature-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.feature-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+
+    /* Simulate a new issue appearing in table */
+    function addLiveIssue() {
+      const issues = [
+        ['#UNAM-1049', '🚽 Sanitation', 'Blocked toilets — urgent', 'Lecture Block D, Toilets', 'HIGH', 'Just now', 'open'],
+        ['#UNAM-1050', '🏠 Hostel', 'Broken geyser in male hostel', 'Hostel Block A', 'HIGH', 'Just now', 'open'],
+        ['#UNAM-1051', '🚗 Parking', 'Gate barrier arm broken', 'Parking Lot C', 'MEDIUM', 'Just now', 'open'],
+      ];
+      let index = 0;
+      setInterval(() => {
+        const tbody = document.getElementById('issueTableBody');
+        const issue = issues[index % issues.length];
+        const priorityClass = issue[4] === 'HIGH' ? 'priority-high' : 'priority-medium';
+        const newRow = document.createElement('tr');
+        newRow.style.cssText = 'animation: slideIssue 0.5s ease both; background: rgba(204,0,0,0.04);';
+        newRow.innerHTML = `
+          <td><span class="issue-id">${issue[0]}</span></td>
+          <td>${issue[1]}</td>
+          <td>${issue[2]}</td>
+          <td>${issue[3]}</td>
+          <td><span class="${priorityClass}">● ${issue[4]}</span></td>
+          <td>${issue[5]}</td>
+          <td><span class="status-pill status-open">Open</span></td>
+        `;
+        tbody.insertBefore(newRow, tbody.firstChild);
+        // Remove last row to keep length
+        if (tbody.rows.length > 8) tbody.removeChild(tbody.lastChild);
+        index++;
+      }, 9000);
+    }
+    addLiveIssue();
+  </script>
+</body>
+</html>
